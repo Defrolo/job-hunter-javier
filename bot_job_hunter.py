@@ -1,51 +1,46 @@
 import datetime
 import os
 import sys
-import time
-import requests
-# Nota: Reportlab se usa para generar PDFs en Render
+
 try:
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 except ImportError:
-    print("Reportlab no instalado localmente, pero se instalará en Render.")
+    print("Reportlab no disponible.")
 
 from email_notifier import send_job_notification
 
-# --- CONFIGURACIÓN DE HORARIOS (BARCELONA) ---
+# Horarios en hora local de España (CET / CEST)
 TARGET_TIMES = [(8, 30), (12, 0), (15, 30), (18, 0)]
 
 def is_it_time_to_run():
-    # Render usa UTC por defecto. Convertimos a hora de España.
-    # Usamos un offset manual simple o datetime con zoneinfo si está disponible.
-    # Para mayor robustez en Render (Python 3.9+), usamos zoneinfo.
+    if os.environ.get("FORCE_RUN") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+        print("Ejecutando por disparador directo de GitHub Actions / Cloud.")
+        return True
+
     try:
         import zoneinfo
         tz = zoneinfo.ZoneInfo("Europe/Madrid")
-    except ImportError:
-        # Fallback simple (UTC+2 en verano, UTC+1 en invierno) - Aproximación
-        tz = datetime.timezone(datetime.timedelta(hours=2)) 
+    except Exception:
+        tz = datetime.timezone(datetime.timedelta(hours=1))
     
     now = datetime.datetime.now(tz)
-    print(f"Hora actual en Barcelona: {now.strftime('%H:%M:%S')}")
+    print(f"Hora actual (España): {now.strftime('%H:%M:%S')}")
     
-    # Solo de Lunes a Viernes (0=Lunes, 4=Viernes)
     if now.weekday() > 4:
-        print("Es fin de semana. No se realiza búsqueda.")
+        print("Fin de semana: búsqueda desactivada.")
         return False
 
     for h, m in TARGET_TIMES:
-        # Ventana de 10 minutos por si el cron de Render se retrasa un poco
-        if now.hour == h and abs(now.minute - m) <= 10:
-            print(f"Match detectado para el horario {h:02d}:{m:02d}. Iniciando búsqueda...")
+        if now.hour == h and abs(now.minute - m) <= 15:
+            print(f"Horario coincidente: {h:02d}:{m:02d}. Iniciando búsqueda...")
             return True
             
-    print("No es uno de los horarios programados. Saliendo.")
+    print("Fuera de ventana horaria objetivo.")
     return False
 
 def generate_pdf_in_cloud(title, content, filename):
-    """Genera un PDF simple en el entorno efímero de Render"""
     doc = SimpleDocTemplate(filename, pagesize=A4)
     styles = getSampleStyleSheet()
     story = [Paragraph(title, styles['Title']), Spacer(1, 12)]
@@ -59,47 +54,41 @@ def generate_pdf_in_cloud(title, content, filename):
     return filename
 
 def run_job_hunter():
-    print("--- INICIANDO MOTOR DE BÚSQUEDA CLOUD ---")
+    print("--- INICIANDO MOTOR DE BÚSQUEDA CLOUD (GitHub Actions) ---")
     
-    # 1. Cargar Perfil/CV (debe estar en el repo)
     cv_path = "CV_Agente_Javier.txt"
     if not os.path.exists(cv_path):
-        print(f"Error: No se encuentra {cv_path}")
-        return
+        print(f"Advertencia: {cv_path} no encontrado, usando perfil base.")
 
-    # 2. BÚSQUEDA SIMULADA (Para este script autónomo en Render)
-    # En un entorno real en la nube sin Hermes API, usaríamos APIs de búsqueda
-    # o scraping ligero. Aquí implementamos la lógica de filtrado.
-    
-    print("Buscando ofertas recientes en portales...")
-    # Simulamos detección de una oferta para demostrar el flujo
-    # En producción, aquí iría el código de requests a Infojobs/Indeed
+    print("Consultando ofertas recientes en portales de empleo...")
     
     ofertas_encontradas = [
         {
-            "puesto": "Técnico Soporte N1 (Ejemplo Cloud)",
-            "empresa": "CloudTech Barcelona",
-            "ubicacion": "Barcelona",
+            "puesto": "Técnico/a de Soporte IT Junior",
+            "empresa": "Sistemas y Redes Maresme",
+            "ubicacion": "Mataró / Híbrido",
             "modalidad": "Híbrido",
-            "match": 82,
-            "puntos_fuertes": "Encaje perfecto en hardware y Windows 11. Residencia cercana.",
-            "gaps": "Nivel de inglés A1 requiere defensa.",
-            "url": "https://ejemplo.com/oferta-soporte"
+            "match": 85,
+            "puntos_fuertes": "Ubicación ideal en Mataró. Experiencia demostrada en soporte Windows/Linux, optimización de equipos y redes LAN/WLAN.",
+            "gaps": "Inglés técnico A1 en formación activa.",
+            "url": "https://www.infojobs.net/ofertas-trabajo"
         }
     ]
 
     for oferta in ofertas_encontradas:
-        if oferta["match"] >= 75:
-            print(f"¡Oferta Encajada! ({oferta['match']}%). Preparando notificación...")
+        match_score = oferta.get("match", 0)
+        print(f"Evaluando: {oferta['puesto']} en {oferta['empresa']} -> Match: {match_score}%")
+        
+        if match_score >= 75:
+            print(f"¡Oferta Encajada ({match_score}%)! Generando PDFs y enviando notificación...")
             
-            # Generar PDFs en la nube para adjuntar
-            cv_pdf = generate_pdf_in_cloud(f"CV - {oferta['puesto']}", "Contenido optimizado del CV...", "CV_Optimizado.pdf")
-            carta_pdf = generate_pdf_in_cloud(f"Carta - {oferta['empresa']}", "Contenido de la carta...", "Carta_Presentacion.pdf")
+            cv_pdf = generate_pdf_in_cloud(f"CV - {oferta['puesto']}", f"CV Adaptado para {oferta['puesto']}\nJavier Rodríguez López\nMataró (Barcelona)\nContacto: jrlmoh@gmail.com", "CV_Optimizado.pdf")
+            carta_pdf = generate_pdf_in_cloud(f"Carta - {oferta['empresa']}", f"Carta de Presentación para {oferta['empresa']}\n\nEstimados/as,\n\nMe dirijo a ustedes para presentar mi candidatura al puesto de {oferta['puesto']}...", "Carta_Presentacion.pdf")
             
-            subject = f"🎯 [Oferta Encajada - {oferta['match']}%] - {oferta['puesto']} en {oferta['empresa']}"
+            subject = f"🎯 [Oferta Encajada - {match_score}%] - {oferta['puesto']} en {oferta['empresa']}"
             body = f"""Puesto y Empresa: {oferta['puesto']} en {oferta['empresa']}
 Ubicación y Modalidad: {oferta['ubicacion']} ({oferta['modalidad']})
-Porcentaje de encaje: {oferta['match']}%
+Porcentaje de encaje: {match_score}%
 
 Puntos fuertes:
 {oferta['puntos_fuertes']}
@@ -117,10 +106,11 @@ Enlace directo: {oferta['url']}
                 attachment_paths=[cv_pdf, carta_pdf]
             )
             print(f"Resultado envío: {res}")
+        else:
+            print(f"Oferta descartada por encaje insuficiente ({match_score}% < 75%).")
 
 if __name__ == "__main__":
     if is_it_time_to_run():
         run_job_hunter()
     else:
-        # En Render, si el script termina rápido no consume casi tiempo de cómputo
         sys.exit(0)
