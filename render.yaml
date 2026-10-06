@@ -1,0 +1,12 @@
+services:
+  - type: cron
+    name: job-hunter-cron
+    env: python
+    schedule: "*/30 * * * 1-5"  # Se ejecuta cada 30 minutos de Lunes a Viernes
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python bot_job_hunter.py"
+    envVars:
+      - key: JOB_ALERT_EMAIL_USER
+        value: jrlmoh@gmail.com
+      - key: JOB_ALERT_EMAIL_PASS
+        sync: false # Deberás introducirla manualmente en Render por seguridad
