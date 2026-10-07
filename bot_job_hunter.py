@@ -396,7 +396,12 @@ def run_job_search():
     tecnoempleo_jobs = search_tecnoempleo()
     print(f"Encontradas {len(tecnoempleo_jobs)} ofertas en Tecnoempleo")
     
-    all_jobs = infojobs_jobs + tecnoempleo_jobs
+    print("Investigando oportunidades ocultas en empresas objetivo...")
+    hidden_opps_raw = search_hidden_opportunities()
+    hidden_opps = transform_hidden_opps(hidden_opps_raw)
+    print(f"Encontradas {len(hidden_opps)} oportunidades ocultas")
+    
+    all_jobs = infojobs_jobs + tecnoempleo_jobs + hidden_opps
     print(f"Total ofertas encontradas: {len(all_jobs)}")
     
     # Process jobs
@@ -494,8 +499,8 @@ jrlmoh@gmail.com
             # Build points fuertes
             points_fuertes = []
             if cv_content:
-                lines = [line.strip() for line in cv_content.split('\n') if line.strip() and len(line.strip()) > 10]
-                points_fuertes = lines[:5] if len(lines) >= 5 else lines
+                lines_cv = [line.strip() for line in cv_content.split('\n') if line.strip() and len(line.strip()) > 10]
+                points_fuertes = lines_cv[:5] if len(lines_cv) >= 5 else lines_cv
             
             points_fuertes_text = ""
             if points_fuertes:
@@ -561,7 +566,7 @@ COMPETENCIAS TÉCNICAS
 • Redes: LAN/WLAN, TCP/IP, Firewalls
 • Hardware: Montaje, diagnóstico, reparación
 • Software: Herramientas de ticketing, software de soporte
-• Otros: SQL básico, Python, Docker, agentes LMM
+• Otros: SQL básico, Python, Docker, agentes LLM
 
 EXPERIENCIA RELEVANTE
 • Soporte IT Freelance (2018-presente): Resolución de incidencias, optimización de sistemas
@@ -617,10 +622,163 @@ Ofertas procesadas: {processed_count}
 Emails enviados: {email_sent_count}
 PDFs generados: {pdf_generated_count}
 Trabajos en historial: {len(new_job_history)}
-""")
+"")
     
     return processed_count > 0
+def search_hidden_opportunities():
+    """Search for hidden job opportunities by investigating target company websites"""
+    hidden_opps = []
+    
+    # List of target companies in Mataró/Barcelona area with their websites and focus
+    target_companies = [
+        {
+            "name": "SOSMATIC",
+            "website": "https://www.sosmatic.com/",
+            "location": "Mataró",
+            "sector": "Soporte técnico B2B/B2B2C",
+            "focus": "soporte it, helpdesk, windows, linux, active directory, ticketing, redes"
+        },
+        {
+            "name": "TecnoCampus Mataró",
+            "website": "https://www.tecnocampus.cat/",
+            "location": "Mataró",
+            "sector": "Parque tecnológico y universitario",
+            "focus": "soporte it, infraestructura, redes, sistemas, desarrollo web"
+        },
+        {
+            "name": "Between Technology",
+            "website": "https://www.between technology.com/",
+            "location": "Barcelona",
+            "sector": "Sistemas de control y automatización",
+            "focus": "automatización, plc, scada, redes industriales, soporte it"
+        },
+        {
+            "name": "Arelance",
+            "website": "https://www.arelance.com/",
+            "location": "Martorelles (Barcelona)",
+            "sector": "Outsourcing de servicios TI",
+            "focus": "soporte it, helpdesk, administración de sistemas, cloud"
+        },
+        {
+            "name": "Grupo TESCO",
+            "website": "https://www.gruposte.com/",
+            "location": "Cardedeu (Barcelona)",
+            "sector": "Consultoría empresarial y tecnológica",
+            "focus": "soporte it, consultoría, proyectos tecnológicos, formación"
+        },
+        {
+            "name": "BlackDogs",
+            "website": "https://www.blackdogs.es/",
+            "location": "Barcelona",
+            "sector": "Soporte IT, infraestructura y ciberseguridad",
+            "focus": "ciberseguridad, infraestructura, soporte it, redes, seguridad"
+        },
+        {
+            "name": "BizAway",
+            "website": "https://www.bizaway.io/",
+            "location": "Barcelona",
+            "sector": "Gastos de viaje y gestión empresarial",
+            "focus": "it, soporte, desarrollo, saas"
+        }
+    ]
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
+    for company in target_companies:
+        try:
+            print(f"Investigando {company['name']} en {company['website']}...")
+            response = requests.get(company['website'], headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                text = soup.get_text().lower()
+                
+                # Look for growth signals
+                growth_signals = [
+                    'creciendo', 'expansión', 'nueva sede', 'ampliando equipo',
+                    'buscamos talento', 'se incorpora', 'nuevo proyecto',
+                    'innovación', 'desarrollo', 'inversión', 'crecemos',
+                    'se amplía', 'se incorpora nuevo', 'estamos creciendo'
+                ]
+                
+                found_signals = [signal for signal in growth_signals if signal in text]
+                
+                if found_signals:  # Only consider if there are growth signals
+                    # Calculate opportunity score
+                    score = 0
+                    max_score = 100
+                    
+                    # Location match (20 points)
+                    loc = company['location'].lower()
+                    if 'mataró' in loc or 'barcelona' in loc:
+                        score += 20
+                    elif 'maresme' in loc or 'vallès' in loc:
+                        score += 15
+                    
+                    # Growth signals (30 points)
+                    score += min(len(found_signals) * 5, 30)  # Up to 30 points
+                    
+                    # Tech match (25 points)
+                    tech_keywords = [k.strip() for k in company['focus'].split(',')]
+                    cv_skills = load_cv_data().get('skills', '').lower()
+                    tech_matches = sum(1 for k in tech_keywords if k in cv_skills)
+                    score += min(tech_matches * 3, 25)  # Up to 25 points
+                    
+                    # Sector relevance (25 points)
+                    sector_keywords = ['soporte', 'it', 'informático', 'tecnología', 'sistemas', 'redes', 'logística', 'almacén']
+                    sector_text = company['sector'].lower()
+                    sector_matches = sum(1 for k in sector_keywords if k in sector_text)
+                    score += min(sector_matches * 3, 25)  # Up to 25 points
+                    
+                    if score >= 60:  # Only consider significant opportunities
+                        hidden_opps.append({
+                            'title': f"Oportunidad en {company['name']}",
+                            'company': company['name'],
+                            'location': company['location'],
+                            'sector': company['sector'],
+                            'website': company['website'],
+                            'growth_signals': found_signals,
+                            'opportunity_score': score,
+                            'source': 'Hidden Opportunity'
+                        })
+                        print(f"  -> Oportunidad encontrada: {score}% - {', '.join(found_signals[:3])}")
+                    else:
+                        print(f"  -> Señales débiles: {score}%")
+            else:
+                print(f"  -> Error accessing {company['website']}: {response.status_code}")
+                
+        except Exception as e:
+            print(f"  -> Error investigating {company['name']}: {e}")
+        
+        time.sleep(2)  # Be respectful
+    
+    return hidden_opps
 
+
+def transform_hidden_opps(hidden_opps):
+    """Transform hidden opps to match expected job format"""
+    transformed = []
+    for opp in hidden_opps:
+        job = {
+            'title': opp.get('title', 'Oportunidad'),
+            'company': opp.get('company', 'Empresa desconocida'),
+            'location': opp.get('location', 'Barcelona'),
+            'sector': opp.get('sector', ''),
+            'website': opp.get('website', '#'),
+            'growth_signals': opp.get('growth_signals', []),
+            'opportunity_score': opp.get('opportunity_score', 0),
+            'source': opp.get('source', 'Hidden Opportunity'),
+            'description': f"Oportunidad detectada en {opp.get('company', 'Empresa')}. Señales de crecimiento: {', '.join(opp.get('growth_signals', []))}",
+            'experience_required': 'No se requiere experiencia',  # Assume entry-level for hidden ops
+            'skills': 'soporte it, helpdesk, windows, linux, ticketing',  # Default
+            'education_required': 'No especificado',
+            'date': 'Reciente',
+            'url': opp.get('website', '#')
+        }
+        transformed.append(job)
+    return transformed
 if __name__ == "__main__":
     if is_it_time_to_run():
         run_job_search()
