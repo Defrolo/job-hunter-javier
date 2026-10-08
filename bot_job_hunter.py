@@ -357,6 +357,247 @@ def search_tecnoempleo():
     
     return jobs
 
+def search_linkedin():
+    """Search LinkedIn for relevant positions"""
+    jobs = []
+    
+    # LinkedIn search URLs for different categories
+    search_queries = [
+        "soporte it junior barcelona",
+        "helpdesk barcelona",
+        "técnico informático barcelona",
+        "operario almacén barcelona"
+    ]
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
+    for query in search_queries[:3]:
+        try:
+            # Note: LinkedIn requires authentication for full results
+            # This is a simplified search that may need LinkedIn API credentials
+            url = f"https://www.linkedin.com/jobs/search?keywords={query.replace(' ', '%20')}&location=Barcelona&f_TPR=r86400"  # Last 24 hours
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Find job cards
+                job_cards = soup.find_all('div', class_='job-card') or soup.find_all('section', class_='job')
+                
+                for card in job_cards[:3]:
+                    try:
+                        title_elem = card.find('h2') or card.find('h3') or card.find('a', class_='job-title')
+                        company_elem = card.find('div', class_='company') or card.find('a', class_='company-name')
+                        location_elem = card.find('div', class_='location') or card.find('span', class_='location')
+                        
+                        if title_elem and company_elem:
+                            job = {
+                                'title': title_elem.get_text(strip=True),
+                                'company': company_elem.get_text(strip=True),
+                                'location': location_elem.get_text(strip=True) if location_elem else 'Barcelona',
+                                'url': card.find('a', href=True)['href'] if card.find('a', href=True) else '#',
+                                'source': 'LinkedIn'
+                            }
+                            
+                            # Extract description
+                            full_text = card.get_text().lower()
+                            job['description'] = full_text
+                            
+                            # Simple experience extraction
+                            if 'no se requiere experiencia' in full_text or 'junior' in full_text or 'entry-level' in full_text:
+                                job['experience_required'] = 'No se requiere experiencia'
+                            elif '1 año' in full_text:
+                                job['experience_required'] = '1 año'
+                            elif '2 años' in full_text:
+                                job['experience_required'] = '2 años'
+                            else:
+                                job['experience_required'] = 'Experiencia requerida'
+                            
+                            # Simple skills extraction
+                            skills_list = []
+                            skill_keywords = ['soporte it', 'helpdesk', 'windows', 'linux', 'office', 'excel', 
+                                            'word', 'outlook', 'ticketing', 'redes', 'lan', 'wan', 'hardware', 
+                                            'software', 'atención al cliente', 'trabajo en equipo']
+                            for skill in skill_keywords:
+                                if skill in full_text:
+                                    skills_list.append(skill)
+                            job['skills'] = ', '.join(skills_list) if skills_list else 'No especificado'
+                            
+                            jobs.append(job)
+                    except Exception as e:
+                        print(f"Error parsing LinkedIn job card: {e}")
+                        continue
+            else:
+                print(f"LinkedIn request failed with status {response.status_code}")
+                
+        except Exception as e:
+            print(f"Error searching LinkedIn for '{query}': {e}")
+        
+        time.sleep(1)
+    
+    return jobs
+
+def search_indeed():
+    """Search Indeed for relevant positions"""
+    jobs = []
+    
+    # Indeed search URLs for different categories
+    search_queries = [
+        "soporte it junior barcelona",
+        "helpdesk barcelona",
+        "técnico informático barcelona",
+        "operario almacén barcelona"
+    ]
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
+    for query in search_queries[:3]:
+        try:
+            url = f"https://www.indeed.com/jobs?q={query.replace(' ', '+')}&l=Barcelona&fromage=7"  # Last 7 days
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Find job cards
+                job_cards = soup.find_all('div', class_='job_seen') or soup.find_all('a', class_='result')
+                
+                for card in job_cards[:3]:
+                    try:
+                        title_elem = card.find('h2') or card.find('a', class_='jobtitle')
+                        company_elem = card.find('span', class_='company') or card.find('div', class_='company')
+                        location_elem = card.find('div', class_='recruitment') or card.find('span', class_='location')
+                        
+                        if title_elem and company_elem:
+                            job = {
+                                'title': title_elem.get_text(strip=True),
+                                'company': company_elem.get_text(strip=True),
+                                'location': location_elem.get_text(strip=True) if location_elem else 'Barcelona',
+                                'url': card.find('a', href=True)['href'] if card.find('a', href=True) else '#',
+                                'source': 'Indeed'
+                            }
+                            
+                            # Extract description
+                            full_text = card.get_text().lower()
+                            job['description'] = full_text
+                            
+                            # Simple experience extraction
+                            if 'no se requiere experiencia' in full_text or 'junior' in full_text or 'entry-level' in full_text:
+                                job['experience_required'] = 'No se requiere experiencia'
+                            elif '1 año' in full_text:
+                                job['experience_required'] = '1 año'
+                            elif '2 años' in full_text:
+                                job['experience_required'] = '2 años'
+                            else:
+                                job['experience_required'] = 'Experiencia requerida'
+                            
+                            # Simple skills extraction
+                            skills_list = []
+                            skill_keywords = ['soporte it', 'helpdesk', 'windows', 'linux', 'office', 'excel', 
+                                            'word', 'outlook', 'ticketing', 'redes', 'lan', 'wan', 'hardware', 
+                                            'software', 'atención al cliente', 'trabajo en equipo']
+                            for skill in skill_keywords:
+                                if skill in full_text:
+                                    skills_list.append(skill)
+                            job['skills'] = ', '.join(skills_list) if skills_list else 'No especificado'
+                            
+                            jobs.append(job)
+                    except Exception as e:
+                        print(f"Error parsing Indeed job card: {e}")
+                        continue
+            else:
+                print(f"Indeed request failed with status {response.status_code}")
+                
+        except Exception as e:
+            print(f"Error searching Indeed for '{query}': {e}")
+        
+        time.sleep(1)
+    
+    return jobs
+
+def search_glassdoor():
+    """Search Glassdoor for relevant positions"""
+    jobs = []
+    
+    # Glassdoor search URLs for different categories
+    search_queries = [
+        "soporte it junior barcelona",
+        "helpdesk barcelona",
+        "técnico informático barcelona"
+    ]
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
+    for query in search_queries[:2]:
+        try:
+            # Note: Glassdoor often requires handling cookie consent and may have limited free access
+            url = f"https://www.glassdoor.com/Job/jobs.htm?s={query.replace(' ', '%20')}&l=Barcelona&radius=30" 
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Find job cards (simplified - actual parsing may vary)
+                job_cards = soup.find_all('div', class_='react-job-listing') or soup.find_all('a', class_='jobLink')
+                
+                for card in job_cards[:3]:
+                    try:
+                        title_elem = card.find('h2') or card.find('a', class_='jobTitle')
+                        company_elem = card.find('div', class_='employerName') or card.find('a', class_=' employerName')
+                        
+                        if title_elem and company_elem:
+                            job = {
+                                'title': title_elem.get_text(strip=True),
+                                'company': company_elem.get_text(strip=True),
+                                'location': 'Barcelona',
+                                'url': card.find('a', href=True)['href'] if card.find('a', href=True) else '#',
+                                'source': 'Glassdoor'
+                            }
+                            
+                            # Extract basic info
+                            full_text = card.get_text().lower()
+                            job['description'] = full_text
+                            
+                            # Simple experience extraction
+                            if 'no se requiere experiencia' in full_text or 'junior' in full_text or 'entry-level' in full_text:
+                                job['experience_required'] = 'No se requiere experiencia'
+                            elif '1 año' in full_text:
+                                job['experience_required'] = '1 año'
+                            elif '2 años' in full_text:
+                                job['experience_required'] = '2 años'
+                            else:
+                                job['experience_required'] = 'Experiencia requerida'
+                            
+                            # Simple skills extraction
+                            skills_list = []
+                            skill_keywords = ['soporte it', 'helpdesk', 'windows', 'linux', 'office', 'excel', 
+                                            'word', 'outlook', 'ticketing', 'redes', 'lan', 'wan', 'hardware', 
+                                            'software', 'atención al cliente', 'trabajo en equipo']
+                            for skill in skill_keywords:
+                                if skill in full_text:
+                                    skills_list.append(skill)
+                            job['skills'] = ', '.join(skills_list) if skills_list else 'No especificado'
+                            
+                            jobs.append(job)
+                    except Exception as e:
+                        print(f"Error parsing Glassdoor job card: {e}")
+                        continue
+            else:
+                print(f"Glassdoor request failed with status {response.status_code}")
+                
+        except Exception as e:
+            print(f"Error searching Glassdoor for '{query}': {e}")
+        
+        time.sleep(1)
+    
+    return jobs
+
 def generate_pdf_in_cloud(title, content, filename):
     """Generate a simple PDF in the cloud environment"""
     try:
@@ -396,12 +637,25 @@ def run_job_search():
     tecnoempleo_jobs = search_tecnoempleo()
     print(f"Encontradas {len(tecnoempleo_jobs)} ofertas en Tecnoempleo")
     
+    print("Buscando ofertas en LinkedIn...")
+    linkedin_jobs = search_linkedin()
+    print(f"Encontradas {len(linkedin_jobs)} ofertas en LinkedIn")
+    
+    print("Buscando ofertas en Indeed...")
+    indeed_jobs = search_indeed()
+    print(f"Encontradas {len(indeed_jobs)} ofertas en Indeed")
+    
+    print("Buscando ofertas en Glassdoor...")
+    glassdoor_jobs = search_glassdoor()
+    print(f"Encontradas {len(glassdoor_jobs)} ofertas en Glassdoor")
+    
     print("Investigando oportunidades ocultas en empresas objetivo...")
+
     hidden_opps_raw = search_hidden_opportunities()
     hidden_opps = transform_hidden_opps(hidden_opps_raw)
     print(f"Encontradas {len(hidden_opps)} oportunidades ocultas")
     
-    all_jobs = infojobs_jobs + tecnoempleo_jobs + hidden_opps
+    all_jobs = infojobs_jobs + tecnoempleo_jobs + linkedin_jobs + indeed_jobs + glassdoor_jobs + hidden_opps
     print(f"Total ofertas encontradas: {len(all_jobs)}")
     
     # Process jobs
