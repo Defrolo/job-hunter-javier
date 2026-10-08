@@ -622,7 +622,7 @@ Ofertas procesadas: {processed_count}
 Emails enviados: {email_sent_count}
 PDFs generados: {pdf_generated_count}
 Trabajos en historial: {len(new_job_history)}
-"")
+""")
     
     return processed_count > 0
 def search_hidden_opportunities():
@@ -770,7 +770,10 @@ def transform_hidden_opps(hidden_opps):
             'growth_signals': opp.get('growth_signals', []),
             'opportunity_score': opp.get('opportunity_score', 0),
             'source': opp.get('source', 'Hidden Opportunity'),
-            'description': f"Oportunidad detectada en {opp.get('company', 'Empresa')}. Señales de crecimiento: {', '.join(opp.get('growth_signals', []))}",
+            'description': 'Oportunidad detectada en {}. Señales de crecimiento: {}'.format(
+                opp.get('company', 'Empresa'),
+                ', '.join(opp.get('growth_signals', []))
+            ),
             'experience_required': 'No se requiere experiencia',  # Assume entry-level for hidden ops
             'skills': 'soporte it, helpdesk, windows, linux, ticketing',  # Default
             'education_required': 'No especificado',
