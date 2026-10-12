@@ -901,7 +901,7 @@ def search_hidden_opportunities():
         },
         {
             "name": "Between Technology",
-            "website": "https://www.between technology.com/",
+            "website": "https://www.between.tech/",
             "location": "Barcelona",
             "sector": "Sistemas de control y automatización",
             "focus": "automatización, plc, scada, redes industriales, soporte it"
@@ -919,20 +919,6 @@ def search_hidden_opportunities():
             "location": "Cardedeu (Barcelona)",
             "sector": "Consultoría empresarial y tecnológica",
             "focus": "soporte it, consultoría, proyectos tecnológicos, formación"
-        },
-        {
-            "name": "BlackDogs",
-            "website": "https://www.blackdogs.es/",
-            "location": "Barcelona",
-            "sector": "Soporte IT, infraestructura y ciberseguridad",
-            "focus": "ciberseguridad, infraestructura, soporte it, redes, seguridad"
-        },
-        {
-            "name": "BizAway",
-            "website": "https://www.bizaway.io/",
-            "location": "Barcelona",
-            "sector": "Gastos de viaje y gestión empresarial",
-            "focus": "it, soporte, desarrollo, saas"
         }
     ]
     
