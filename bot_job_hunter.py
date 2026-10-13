@@ -1024,7 +1024,11 @@ def transform_hidden_opps(hidden_opps):
     return transformed
 if __name__ == "__main__":
     if is_it_time_to_run():
-        run_job_search()
+        try:
+            run_job_search()
+        except Exception as e:
+            print(f"Error crítico en la ejecución: {e}")
+            sys.exit(1)
     else:
         print("Fuera de horario permitido. Finalizando.")
         sys.exit(0)
