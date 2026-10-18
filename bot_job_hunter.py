@@ -978,6 +978,62 @@ def search_hidden_opportunities():
             "location": "Barcelona",
             "sector": "Soluciones TI y soporte global",
             "focus": "soporte it, helpdesk, operaciones, sistemas"
+        },
+        {
+            "name": "Eurecat",
+            "website": "https://eurecat.org/es/",
+            "location": "Mataró / Barcelona",
+            "sector": "Centro tecnológico de Cataluña",
+            "focus": "soporte técnico, sistemas, redes, hardware, innovación"
+        },
+        {
+            "name": "Econocom España",
+            "website": "https://www.econocom.es/",
+            "location": "Barcelona",
+            "sector": "Servicios digitales y equipamiento IT",
+            "focus": "soporte it, helpdesk n1, mantenimiento, microinformática, ticketing"
+        },
+        {
+            "name": "Inetum España",
+            "website": "https://www.inetum.com/es",
+            "location": "Barcelona",
+            "sector": "Servicios y soluciones digitales",
+            "focus": "soporte técnico, helpdesk, sistemas, redes, cloud"
+        },
+        {
+            "name": "Sopra Steria",
+            "website": "https://www.soprasteria.es/",
+            "location": "Barcelona",
+            "sector": "Consultoría y servicios de TI",
+            "focus": "soporte it, monitorización, microinformática, infraestructuras"
+        },
+        {
+            "name": "GFT Technologies",
+            "website": "https://www.gft.com/es/es",
+            "location": "Sant Cugat / Barcelona",
+            "sector": "Transformación digital y servicios TI",
+            "focus": "soporte sistemas, infraestructura, cloud, helpdesk"
+        },
+        {
+            "name": "Costaisa",
+            "website": "https://www.costaisa.com/es/",
+            "location": "Barcelona",
+            "sector": "Consultoría TI y salud digital",
+            "focus": "soporte microinformático, helpdesk, sistemas, ticketing"
+        },
+        {
+            "name": "Semic",
+            "website": "https://www.semic.es/",
+            "location": "Barcelona",
+            "sector": "Soluciones y mantenimiento tecnológico",
+            "focus": "soporte técnico, mantenimiento hardware, microinformática, redes"
+        },
+        {
+            "name": "Telefónica Tech",
+            "website": "https://telefonicatech.com/es",
+            "location": "Barcelona",
+            "sector": "Ciberseguridad y servicios cloud",
+            "focus": "soporte it, monitorización, operaciones, redes"
         }
     ]
     
