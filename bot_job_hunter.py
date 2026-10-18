@@ -7,6 +7,12 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
+import random
+
+try:
+    import cloudscraper
+except ImportError:
+    cloudscraper = None
 
 try:
     from reportlab.lib.pagesizes import A4
@@ -23,6 +29,28 @@ HISTORY_FILE = "job_history.json"
 MIN_MATCH_SCORE_FOR_EMAIL = 75
 MIN_MATCH_SCORE_FOR_PDF = 70
 MAX_JOBS_TO_PROCESS = 20  # Limit to avoid overload
+
+def get_random_headers():
+    user_agents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0'
+    ]
+    return {
+        'User-Agent': random.choice(user_agents),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Cache-Control': 'max-age=0'
+    }
+
+def get_scraper():
+    if cloudscraper:
+        return cloudscraper.create_scraper()
+    return requests.Session()
 
 def is_it_time_to_run():
     """Check if current time matches one of our target times (Spain time)"""
@@ -451,14 +479,12 @@ def search_indeed():
         "operario almacén barcelona"
     ]
     
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
+    scraper = get_scraper()
     
     for query in search_queries[:3]:
         try:
-            url = f"https://www.indeed.com/jobs?q={query.replace(' ', '+')}&l=Barcelona&fromage=7"  # Last 7 days
-            response = requests.get(url, headers=headers, timeout=10)
+            url = f"https://es.indeed.com/jobs?q={query.replace(' ', '+')}&l=Barcelona&fromage=7"  # Last 7 days
+            response = scraper.get(url, headers=get_random_headers(), timeout=12)
             
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, 'html.parser')
@@ -530,15 +556,13 @@ def search_glassdoor():
         "técnico informático barcelona"
     ]
     
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
+    scraper = get_scraper()
     
     for query in search_queries[:2]:
         try:
             # Note: Glassdoor often requires handling cookie consent and may have limited free access
-            url = f"https://www.glassdoor.com/Job/jobs.htm?s={query.replace(' ', '%20')}&l=Barcelona&radius=30" 
-            response = requests.get(url, headers=headers, timeout=10)
+            url = f"https://www.glassdoor.es/Job/barcelona-{query.replace(' ', '-')}-jobs-SRCH_IL.0,9_IC2603040_KO10.htm" 
+            response = scraper.get(url, headers=get_random_headers(), timeout=12)
             
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, 'html.parser')
