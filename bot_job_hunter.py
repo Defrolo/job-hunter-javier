@@ -943,6 +943,41 @@ def search_hidden_opportunities():
             "location": "Cardedeu (Barcelona)",
             "sector": "Consultoría empresarial y tecnológica",
             "focus": "soporte it, consultoría, proyectos tecnológicos, formación"
+        },
+        {
+            "name": "SEIDOR",
+            "website": "https://www.seidor.com/",
+            "location": "Barcelona",
+            "sector": "Consultoría tecnológica y servicios IT",
+            "focus": "soporte it, sap, infraestructura, helpdesk, consultoría"
+        },
+        {
+            "name": "BEEVA / BBVA IT",
+            "website": "https://www.bbva.com/",
+            "location": "Barcelona",
+            "sector": "Tecnología y banca digital",
+            "focus": "soporte, sistemas, redes, desarrollo, operaciones"
+        },
+        {
+            "name": "T-Systems Iberia",
+            "website": "https://www.t-systems.com/es/es",
+            "location": "Barcelona",
+            "sector": "Telecomunicaciones y servicios IT",
+            "focus": "soporte it, helpdesk, cloud, redes, sistemas"
+        },
+        {
+            "name": "Capgemini Barcelona",
+            "website": "https://www.capgemini.com/es-es/",
+            "location": "Barcelona",
+            "sector": "Consultoría y servicios de outsourcing IT",
+            "focus": "soporte técnico, infraestructura, helpdesk, desarrollo"
+        },
+        {
+            "name": "Softtek España",
+            "website": "https://www.softtek.com/es/",
+            "location": "Barcelona",
+            "sector": "Soluciones TI y soporte global",
+            "focus": "soporte it, helpdesk, operaciones, sistemas"
         }
     ]
     
